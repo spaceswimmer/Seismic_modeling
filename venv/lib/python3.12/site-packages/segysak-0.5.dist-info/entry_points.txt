@@ -1,0 +1,5 @@
+[console_scripts]
+segysak = segysak._cli:cli
+
+[xarray.backends]
+sgy_engine = segysak.segy._xarray:SgyBackendEntrypoint

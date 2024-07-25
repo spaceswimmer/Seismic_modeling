@@ -1,0 +1,27 @@
+Metadata-Version: 2.1
+Name: gempy_viewer
+Version: 2024.2.0
+Summary: Viewer for the geological modeling package GemPy
+Home-page: 
+Author: Miguel de la Varga
+Author-email: miguel@terranigma-solutions.com
+License: EUPL
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Classifier: Topic :: Scientific/Engineering :: GIS
+Classifier: Programming Language :: Python :: 3.10
+Requires-Python: >=3.10
+License-File: LICENSE
+License-File: AUTHORS.rst
+Requires-Dist: gempy ~=2024.2.0
+Requires-Dist: matplotlib
+Requires-Dist: numpy
+Provides-Extra: dev
+Requires-Dist: pytest ; extra == 'dev'
+Provides-Extra: opt
+Requires-Dist: pyvista ; extra == 'opt'
+Requires-Dist: scipy ; extra == 'opt'
+Requires-Dist: pooch ; extra == 'opt'
+Requires-Dist: pandas ; extra == 'opt'
+

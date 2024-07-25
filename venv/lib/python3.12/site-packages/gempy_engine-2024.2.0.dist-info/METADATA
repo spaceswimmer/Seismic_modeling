@@ -1,0 +1,81 @@
+Metadata-Version: 2.1
+Name: gempy_engine
+Version: 2024.2.0
+Summary: A Python package for GemPy
+Home-page: https://github.com/gempy-project/gempy_engine
+Author: Miguel de la Varga
+Author-email: miguel@terranigma-solutions.com
+License: EUPL-1.2
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE
+License-File: AUTHORS.rst
+Requires-Dist: numpy
+Requires-Dist: python-dotenv ~=1.0.1
+Provides-Extra: dev
+Requires-Dist: numpy ; extra == 'dev'
+Requires-Dist: python-dotenv ~=1.0.1 ; extra == 'dev'
+Requires-Dist: torch ; extra == 'dev'
+Requires-Dist: matplotlib ; extra == 'dev'
+Requires-Dist: pandas ; extra == 'dev'
+Requires-Dist: pytest ; extra == 'dev'
+Requires-Dist: pytest-benchmark ; extra == 'dev'
+Requires-Dist: pytest-approvaltests ; extra == 'dev'
+Provides-Extra: opt
+Requires-Dist: numpy ; extra == 'opt'
+Requires-Dist: python-dotenv ~=1.0.1 ; extra == 'opt'
+Requires-Dist: torch ; extra == 'opt'
+Provides-Extra: server
+Requires-Dist: numpy ; extra == 'server'
+Requires-Dist: python-dotenv ~=1.0.1 ; extra == 'server'
+Requires-Dist: torch ; extra == 'server'
+Requires-Dist: fastapi ; extra == 'server'
+Requires-Dist: uvicorn[standard] ; extra == 'server'
+Requires-Dist: subsurface ; extra == 'server'
+Requires-Dist: pandas ; extra == 'server'
+
+# gempy_engine
+
+
+## GPU Install in Linux
+
+
+- Check the instalation guide of tensorflow. It is very picky on the enviroment
+- Install nvidia drivers before trying to install cuda
+    - the cuda installer has also the drivers but apparently is more difficult to set up
+- Download the .run file instead the deb file
+- cuDNN is always required an it is a pain
+  + this has to be installed with dev because it is IMPORTANT to install:
+    - Runtime library
+    - developer library
+  
+### pykeops
+  - It needs cmake in the enviroment
+  - Make sure this is in bashrc:
+
+
+### Adding environment variables:
+
+>  export PATH="/usr/local/cuda-11.2/bin:$PATH"
+> 
+>  export LD_LIBRARY_PATH="/usr/local/cuda-8.0/lib64:$LD_LIBRARY_PATH"
+
+for WSL:
+>  export PATH=/usr/local/cuda/bin:$PATH
+> 
+>  export LD_LIBRARY_PATH=/usr/lib/wsl/lib:$LD_LIBRARY_PATH
+
+> **Important**: Make sure that your Python-dev version matches your environment python version.
+
+Adding the path to bash is not enough for Pycharm. It has to be added to the enviroment variables. In ubuntu is on the file `/etc/environment`. Edit it with the following command `sudo -H gedit /etc/environment`.
+
+You can check that the variables are properly set in Pycharm looking in the Run Config
+
