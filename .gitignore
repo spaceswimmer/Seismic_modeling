@@ -1,5 +1,6 @@
 #Ignore folders
 Test_code/
+.venv/
 
 #Ignore files
 .ipynb_checkpoints
