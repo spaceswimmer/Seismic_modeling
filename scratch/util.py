@@ -23,8 +23,8 @@ def CreateSeismicModel(vp,vs,rho, origin, spacing, shape, so, nbl, bcs='damp'):
 
     rho_data_nozero = np.where(rho == 0, 1, rho)
     
-    # model.update('vp', vp)
-    # model.update('vs', vs)
+    model.update('vp', vp)
+    model.update('vs', vs)
     model.update('b', 1/rho_data_nozero)
 
     model._initialize_physics(vp=vp,
@@ -32,6 +32,7 @@ def CreateSeismicModel(vp,vs,rho, origin, spacing, shape, so, nbl, bcs='damp'):
                               b=model.b.data[nbl:-nbl, nbl:-nbl],
                               space_order=so
                              )
+    
     return model
 
 def nn_interp_coords(data: np.ndarray, origin: tuple, domain_size : tuple, spacing : tuple, dim_vectors : tuple):
@@ -45,7 +46,7 @@ def nn_interp_coords(data: np.ndarray, origin: tuple, domain_size : tuple, spaci
 
     return new_value
     
-def plot_rec_src(model: SeismicModel, data_type: str, src, rec: source.PointSource, xrange: tuple = None, yrange: tuple = None):
+def plot_rec_src(model: SeismicModel, data_type: str, src_coords, rec_coords, xrange: tuple = None, yrange: tuple = None):
     cmap = "jet"
     domain_size = 1.e-3 * np.array(model.domain_size)
     extent = [model.origin[0], model.origin[0] + domain_size[0],
@@ -74,9 +75,9 @@ def plot_rec_src(model: SeismicModel, data_type: str, src, rec: source.PointSour
     plt.xlabel('X position (km)')
     plt.ylabel('Depth (km)')
     
-    plt.scatter(1e-3*rec.coordinates.data[:, 0], 1e-3*rec.coordinates.data[:, 1],
+    plt.scatter(1e-3*rec_coords[:, 0], 1e-3*rec_coords[:, 1],
                         s=15, c='green', marker='D')
-    plt.scatter(1e-3*src.coordinates.data[:, 0], 1e-3*src.coordinates.data[:, 1],
+    plt.scatter(1e-3*src_coords[:, 0], 1e-3*src_coords[:, 1],
                         s=15, c='red', marker='D')
         
     plt.colorbar(plot)
