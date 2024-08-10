@@ -36,7 +36,7 @@ def CreateSeismicModel(vp,vs,rho, origin, spacing, shape, so, nbl, bcs='damp'):
     return model
 
 def nn_interp_coords(data: np.ndarray, origin: tuple, domain_size : tuple, spacing : tuple, dim_vectors : tuple):
-    X, Z = [np.arange(o, ds+sp, step=sp, dtype='float') for o, ds, sp in zip(origin, domain_size, spacing)]
+    X, Z = [np.arange(o, ds, step=sp, dtype='float') for o, ds, sp in zip(origin, domain_size, spacing)]
     Z, X = np.meshgrid(Z, X)
     interp = RegularGridInterpolator(dim_vectors, data,
                                      method='nearest',
