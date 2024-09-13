@@ -2,6 +2,7 @@
 Test_code/
 .venv/
 Results/
+Modeling_data/Meshdurechenskaya/
 
 #Ignore files
 .ipynb_checkpoints

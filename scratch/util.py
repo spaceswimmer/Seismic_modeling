@@ -16,7 +16,7 @@ def plot_hist_pars(el_pars, ignore_zero=False):
         ax.set_ylim([0, 20])
     plt.show()
 
-def CreateSeismicModel(vp,vs,rho, origin, spacing, shape, so, nbl, bcs='damp'):
+def CreateSeismicModelElastic(vp, vs, rho, origin, spacing, shape, so, nbl, bcs='damp'):
 
     model = demo_model(preset='layers-elastic', nlayers=3, shape=shape, spacing=spacing,
                    space_order=so, origin = origin, nbl = nbl,)
@@ -30,6 +30,23 @@ def CreateSeismicModel(vp,vs,rho, origin, spacing, shape, so, nbl, bcs='damp'):
     model._initialize_physics(vp=vp,
                               vs=vs,
                               b=model.b.data[nbl:-nbl, nbl:-nbl],
+                              space_order=so
+                             )
+    
+    return model
+
+def CreateSeismicModelAcoustic(vp, rho, origin, spacing, shape, so, nbl, bcs='damp'):
+
+    model = demo_model(preset='layers-isotropic', nlayers=3, shape=shape, spacing=spacing,
+                   space_order=so, origin = origin, nbl = nbl, density = True)
+
+    rho_data_nozero = np.where(rho == 0, 1, rho)
+    
+    model.update('vp', vp)
+    model.update('b', 1/rho_data_nozero)
+
+    model._initialize_physics(vp=vp,
+                              b=1/rho_data_nozero,
                               space_order=so
                              )
     
@@ -75,8 +92,8 @@ def plot_rec_src(model: SeismicModel, data_type: str, src_coords, rec_coords, xr
     plt.xlabel('X position (km)')
     plt.ylabel('Depth (km)')
     
-    plt.scatter(1e-3*rec_coords[:, 0], 1e-3*rec_coords[:, 1],
-                        s=15, c='green', marker='D')
+    # plt.scatter(1e-3*rec_coords[:, 0], 1e-3*rec_coords[:, 1],
+    #                     s=15, c='green', marker='D')
     plt.scatter(1e-3*src_coords[:, 0], 1e-3*src_coords[:, 1],
                         s=15, c='red', marker='D')
         
@@ -86,13 +103,12 @@ def plot_rec_src(model: SeismicModel, data_type: str, src_coords, rec_coords, xr
     plt.ylim(yrange)
     plt.show()
 
-def plot_seis_data(rec_coordinates, rec_data, t0: float, tn: float):
+def plot_seis_data(rec_coordinates, rec_data, t0: float, tn: float, gain = 2e1):
     #NBVAL_SKIP
     # Pressure (txx + tzz) data at sea surface
     extent = [rec_coordinates[0, 0], rec_coordinates[-1, 0], 1e-3*tn, t0]
     aspect = rec_coordinates[-1, 0]/(1e-3*tn)
     vminmax = np.max(np.abs(rec_data))
-    gain = 2e1
     sc = vminmax/gain
     plt.figure(figsize=(15, 15))
     plt.imshow(rec_data[::5,:], vmin=-sc, vmax=sc, cmap="seismic",

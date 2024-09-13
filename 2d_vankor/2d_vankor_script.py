@@ -117,7 +117,7 @@ for i, scenario in enumerate(scenarios[:1]): #single check
         # inheader = segysak.segy.segy_header_scrape(scenario+'/Vs_smooth_2D')
         rec_v = rec_v.resample(dt=dt_r)
         
-        segyio.tools.from_array2D(scenario+'/Results/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', rec_v.data.T, dt=dt_r*10**3)
+        segyio.tools.from_array2D('/Results/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', rec_v.data.T, dt=dt_r*10**3)
         with segyio.open(scenario+'/Results/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', 'r+') as f:
             for j in range(len(f.header)):
                 f.header[j] = {segyio.TraceField.SourceGroupScalar : -100,
