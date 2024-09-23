@@ -83,8 +83,15 @@ for i in range(12):
     rec.coordinates.data[i*1001:i*1001+1001,1] = i*50
     rec.coordinates.data[i*1001:i*1001+1001,2] = 0
 
+# We need some initial conditions
+    V_p = 1.5
+    density = 1.
+
+    ro = 1/density
+    l2m = V_p*V_p*density
+
 #solver
-pbar = tqdm(src_coordinates[1:])
+pbar = tqdm(src_coordinates[7:])
 for i, src_coords in enumerate(pbar):
     pbar.set_description('Source %s' % str(src_coords))
     # Now we create the velocity and pressure fields
@@ -97,12 +104,6 @@ for i, src_coords in enumerate(pbar):
     rec_term = rec.interpolate(expr=u.forward)
 
     rec.data.fill(0.)
-    # We need some initial conditions
-    V_p = 1.5
-    density = 1.
-
-    ro = 1/density
-    l2m = V_p*V_p*density
 
     #Operator
     pde = model.m * u.dt2 - u.laplace + model.damp * u.dt
@@ -122,4 +123,5 @@ for i, src_coords in enumerate(pbar):
                            segyio.TraceField.GroupX  : int(rec.coordinates.data[j, 0]),
                            segyio.TraceField.GroupY  : int(rec.coordinates.data[j, 1]),
                            }
+    del op, stencil, pde, rec_res, u, src, src_term, rec_term
     gc.collect()

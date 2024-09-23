@@ -3,6 +3,9 @@ from matplotlib import pyplot as plt
 from examples.seismic import SeismicModel, plot_velocity, demo_model, source
 from scipy.interpolate import NearestNDInterpolator, RegularGridInterpolator
 
+def surface_indecies(arr, axis=1, invalid_val=-1):
+    mask = arr!=0
+    return np.where(mask.any(axis=axis), mask.argmax(axis=axis), invalid_val)
 
 def plot_hist_pars(el_pars, ignore_zero=False):
     fig, axs = plt.subplots(1, 3, figsize=(12, 3), dpi=150)

@@ -1,8 +1,8 @@
 #Ignore folders
-Test_code/
 .venv/
 Results/
-Modeling_data/Meshdurechenskaya/
+Data/Meshdurechenskaya/
+schism/
 
 #Ignore files
 .ipynb_checkpoints
