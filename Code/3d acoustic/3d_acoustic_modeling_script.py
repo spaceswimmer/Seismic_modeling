@@ -16,7 +16,7 @@ configuration['compiler'] = 'pgcc'
 configuration['language'] = 'openacc'
 
 #Open vp segy
-dstpath = 'Modeling_data/Meshdurechenskaya/Vp 3D Big_tilted_trim.sgy'
+dstpath = '../../Data/Meshdurechenskaya/Model_2_3d/Vp 3D Big_tilted_trim.sgy'
 src = segyio.open(dstpath, mode='r', endian='big', ignore_geometry=True)
 vp = segyio.tools.collect(src.trace[:])
 cdpx = []
@@ -31,7 +31,7 @@ yu = np.unique(cdpy)
 vp = np.reshape(vp, (yu.size, xu.size, vp.shape[-1])).transpose(1,0,2)[:,240:351,:]
 
 #Open rho segy
-dstpath = 'Modeling_data/Meshdurechenskaya/Rho 3D Big_tilted_trim.sgy'
+dstpath = '../../Data/Meshdurechenskaya/Model_1_3d/Rho 3D Big_tilted_trim.sgy'
 src = segyio.open(dstpath, mode='r', endian='big', ignore_geometry=True)
 rho = segyio.tools.collect(src.trace[:])
 cdpx = []
