@@ -24,11 +24,6 @@ def propagate_wavefront(src, vmodel):
     ff.vv.npts = vmodel.npts
     ff.vv.values = vmodel.values
 
-    # Define a near-field grid centered on the source location
-    nf = pykonal.EikonalSolver(coord_sys="spherical")
-    nf.vv.min_coords = 1, np.pi/2, 0
-    nf.vv.node_intervals = 10, 1, np.pi/31
-    nf.vv.npts = 50, 1, 32
 
     # Interpolate velocity from the far-field grid to the near-field grid
     xyz = sph2xyz(nf.vv.nodes, x0=src[0], y0=src[1])
