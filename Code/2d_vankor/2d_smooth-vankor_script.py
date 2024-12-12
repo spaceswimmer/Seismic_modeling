@@ -10,7 +10,7 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 from tqdm import tqdm
-from devito import configuration, VectorTimeFunction, TensorTimeFunction
+from devito import configuration, VectorTimeFunction, TensorTimeFunction, gaussian_smooth
 from examples.seismic import AcquisitionGeometry, plot_velocity
 from examples.seismic.elastic import ElasticWaveSolver
 from scratch.util import CreateSeismicModelElastic, nn_interp_coords
@@ -70,9 +70,9 @@ for i, scenario in enumerate(scenarios[:1]): #single check
     rho_data_int = nn_interp_coords(rho_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
     vp_data_int = nn_interp_coords(vp_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
     vs_data_int = nn_interp_coords(vs_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
-    rho_data_int = rho_data_int[:,50:]
-    vp_data_int = vp_data_int[:,50:]
-    vs_data_int = vs_data_int[:,50:]
+    rho_data_int = gaussian_smooth(rho_data_int[:,50:], sigma=(9,9))
+    vp_data_int = gaussian_smooth(vp_data_int[:,50:], sigma=(9,9))
+    vs_data_int = gaussian_smooth(vs_data_int[:,50:], sigma=(9,9))
 
     # модель
     model = CreateSeismicModelElastic(origin=origin,
@@ -119,16 +119,16 @@ for i, scenario in enumerate(scenarios[:1]): #single check
         solver = ElasticWaveSolver(model, geometry, space_order=so, v=v, tau=tau)
         
         # оператор
+        print('Starting operator')
         rec_p, rec_v, v, _, _ = solver.forward() # tau summary
-        
+        print('finished operator')
         # выгрузка в sgy
         dt_r = 0.5
         # inheader = segysak.segy.segy_header_scrape(scenario+'/Vs_smooth_2D')
         rec_v = rec_v.resample(dt=dt_r)
-        print(np.unique(rec_v.data))
-        path = 'Results/2d_vankor/Regular'
-        segyio.tools.from_array2D(path +'/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', rec_v.data.T, dt=dt_r*10**3)
-        with segyio.open(path+'/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', 'r+') as f:
+        path = 'Results/2d_vankor/Smooth'
+        segyio.tools.from_array2D(path +'/2d_smooth-vankor_SRC-'+str(int(src_coords[0]))+'.sgy', rec_v.data.T, dt=dt_r*10**3)
+        with segyio.open(path+'/2d_smooth-vankor_SRC-'+str(int(src_coords[0]))+'.sgy', 'r+') as f:
             for j in range(len(f.header)):
                 f.header[j] = {segyio.TraceField.SourceGroupScalar : -100,
                                segyio.TraceField.SourceX : int(src_coords[0]*100),
