@@ -3,6 +3,7 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__),'../../'))
 
 import glob
+import gc
 import segyio
 import segysak
 import pandas as pd
@@ -49,9 +50,9 @@ for i, scenario in enumerate(scenarios[:1]): #single check
     el_pars['x'] = np.cumsum(np.sqrt(np.diff(cdp_x, prepend=cdp_x[0])**2+np.diff(cdp_y, prepend=cdp_y[0])**2))/10
     el_pars['z'] = el_pars['Rho'].samples.data
     # привычный формат
-    rho_data = (el_pars["Rho"].data[:,50:]/1000).to_numpy()
-    vp_data = (el_pars["Vp"].data[:,50:]/1000).to_numpy()
-    vs_data = (el_pars["Vs"].data[:,50:]/1000).to_numpy()
+    rho_data = (el_pars["Rho"].data/1000).to_numpy()
+    vp_data = (el_pars["Vp"].data/1000).to_numpy()
+    vs_data = (el_pars["Vs"].data/1000).to_numpy()
 
     # Верхний слой со свойствами воды
     # rho_data[rho_data==0] = 1.
@@ -63,20 +64,23 @@ for i, scenario in enumerate(scenarios[:1]): #single check
     spacing = (2.5, 2.5) # z из header_rho.loc["TRACE_SAMPLE_INTERVAL", "mean"]
     origin = (0, 0)
     nbl = 40
-    so = 8
+    so = 4
     
     # инт данные
-    # rho_data_int = nn_interp_coords(rho_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
-    # vp_data_int = nn_interp_coords(vp_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
-    # vs_data_int = nn_interp_coords(vs_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
+    rho_data_int = nn_interp_coords(rho_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
+    vp_data_int = nn_interp_coords(vp_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
+    vs_data_int = nn_interp_coords(vs_data, origin, (el_pars['x'].max(), el_pars['z'].max()), spacing, dim_vectors)
+    rho_data_int = rho_data_int[:,50:]
+    vp_data_int = vp_data_int[:,50:]
+    vs_data_int = vs_data_int[:,50:]
 
     # модель
     model = CreateSeismicModelElastic(origin=origin,
                            spacing=spacing,
-                           shape=rho_data.shape,
-                           vp=vp_data,
-                           vs=vs_data,
-                           rho=rho_data,
+                           shape=rho_data_int.shape,
+                           vp=vp_data_int,
+                           vs=vs_data_int,
+                           rho=rho_data_int,
                            so=so,
                            nbl=nbl,
                            bcs='mask',
@@ -87,9 +91,9 @@ for i, scenario in enumerate(scenarios[:1]): #single check
     tn=1000.
     f0=0.025
 
-    nsrc = 1
+    nsrc = 20
     src_coordinates = np.empty((nsrc, 2))
-    src_coordinates[:, 0] = 400
+    src_coordinates[:, 0] = np.arange(3500,4500, 50)
     src_coordinates[:, 1] = 0
     
     # nsrc = 245
@@ -99,14 +103,14 @@ for i, scenario in enumerate(scenarios[:1]): #single check
 
     nrec = int(el_pars['x'].max()/5) #df_ins.shape[0]
     rec_coordinates = np.empty((nrec+1, 2))
-    rec_coordinates[:,0] = np.arange(0, int(el_pars['x'].max()), 5)/10 #df_ins['X']
+    rec_coordinates[:,0] = np.arange(0, int(el_pars['x'].max()), 5) #df_ins['X']
     rec_coordinates[:,1] = 0 #df_ins['Z']
+    print(rho_data_int.shape, rho_data.shape)
     plot_velocity(model, source=src_coordinates, receiver=rec_coordinates)
     # тензоры
     v = VectorTimeFunction(name='v', grid=model.grid, space_order=so, time_order=2)
     tau = TensorTimeFunction(name='t', grid=model.grid, space_order=so, time_order=2)
 
-    print('Starting operator')
     for i, src_coords in enumerate(tqdm(src_coordinates)):
         print('Source - ', i, '; Coordinate - ', src_coords)
         geometry = AcquisitionGeometry(model, rec_coordinates, src_coords, t0, tn, f0=f0, src_type='Ricker')
@@ -115,14 +119,15 @@ for i, scenario in enumerate(scenarios[:1]): #single check
         solver = ElasticWaveSolver(model, geometry, space_order=so, v=v, tau=tau)
         
         # оператор
-        rec_p, rec_v, v, tau, summary = solver.forward()
-        
+        print('Starting operator')
+        rec_p, rec_v, v, _, _ = solver.forward() # tau summary
+        print('finished operator')
         # выгрузка в sgy
         dt_r = 0.5
         # inheader = segysak.segy.segy_header_scrape(scenario+'/Vs_smooth_2D')
         rec_v = rec_v.resample(dt=dt_r)
         print(np.unique(rec_v.data))
-        path = '/home/spaceswimmer/Documents/Migr_Lib/Data/Models/NMO'
+        path = 'Results/2d_vankor'
         segyio.tools.from_array2D(path +'/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', rec_v.data.T, dt=dt_r*10**3)
         with segyio.open(path+'/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', 'r+') as f:
             for j in range(len(f.header)):
@@ -134,7 +139,5 @@ for i, scenario in enumerate(scenarios[:1]): #single check
                     #            segyio.TraceField.CDP_Y: np.array(inheader['CDP_Y'][j]*10),
                                # segyio.TraceField.ReceiverGroupElevation: np.array(df_ins['Z'][j], dtype = int),
                                # segyio.TraceField.ElevationScalar : 1,
-                               
-                            
-                            
                               }
+        gc.collect()
