@@ -1,4 +1,5 @@
 import numpy as np
+import re
 from matplotlib import pyplot as plt
 from examples.seismic import SeismicModel, plot_velocity, demo_model, source
 from scipy.interpolate import NearestNDInterpolator, RegularGridInterpolator
@@ -22,7 +23,7 @@ def plot_hist_pars(el_pars, ignore_zero=False):
 def CreateSeismicModelElastic(vp, vs, rho, origin, spacing, shape, so, nbl, bcs='damp'):
 
     model = demo_model(preset='layers-elastic', nlayers=3, shape=shape, spacing=spacing,
-                   space_order=so, origin = origin, nbl = nbl,)
+                   space_order=so, origin = origin, nbl = nbl)
 
     rho_data_nozero = np.where(rho == 0, 1, rho)
     
@@ -95,8 +96,8 @@ def plot_rec_src(model: SeismicModel, data_type: str, src_coords, rec_coords, xr
     plt.xlabel('X position (km)')
     plt.ylabel('Depth (km)')
     
-    # plt.scatter(1e-3*rec_coords[:, 0], 1e-3*rec_coords[:, 1],
-    #                     s=15, c='green', marker='D')
+    plt.scatter(1e-3*rec_coords[:, 0], 1e-3*rec_coords[:, 1],
+                        s=15, c='green', marker='D')
     plt.scatter(1e-3*src_coords[:, 0], 1e-3*src_coords[:, 1],
                         s=15, c='red', marker='D')
         
@@ -119,3 +120,38 @@ def plot_seis_data(rec_coordinates, rec_data, t0: float, tn: float, gain = 2e1):
     plt.ylabel("Time (s)", fontsize=20)
     plt.xlabel("Receiver position (m)", fontsize=20)
     plt.show()
+
+def read_radex_picks(filename):
+    """
+    Reads a file and saves the second and third columns to a NumPy array.
+
+    Args:
+        filename (str): The path to the input file.
+
+    Returns:
+        numpy.ndarray: A NumPy array containing the second and third columns
+                       as floats, or None if the file is empty or has an error.
+    """
+    data_rows = []
+    try:
+        with open(filename, 'r') as file:
+            for line in file:
+                # Skip lines that don't have two columns of numbers after colon.
+                match = re.match(r'^\s*\d+:\s*(\S+)\s+(\S+)', line)
+                if match:
+                    try:
+                        col2 = float(match.group(1))
+                        col3 = float(match.group(2))
+                        data_rows.append([col2, col3])
+                    except ValueError:
+                        print(f"Warning: Could not convert to float in line: {line.strip()}")
+        if not data_rows:
+            print(f"Warning: File {filename} is empty or has no valid data rows.")
+            return None
+        return np.array(data_rows)
+    except FileNotFoundError:
+        print(f"Error: File '{filename}' not found.")
+        return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None

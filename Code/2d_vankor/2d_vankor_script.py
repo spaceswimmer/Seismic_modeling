@@ -91,9 +91,14 @@ for i, scenario in enumerate(scenarios[:1]): #single check
     tn=1000.
     f0=0.025
 
-    nsrc = 82
+    # nsrc = 82
+    # src_coordinates = np.empty((nsrc, 2))
+    # src_coordinates[:, 0] = np.arange(0, int(el_pars['x'].max()), 100)
+    # src_coordinates[:, 1] = 0
+
+    nsrc = 41
     src_coordinates = np.empty((nsrc, 2))
-    src_coordinates[:, 0] = np.arange(0, int(el_pars['x'].max()), 100)
+    src_coordinates[:, 0] = np.arange(2000, 3001, 25)
     src_coordinates[:, 1] = 0
     
     # nsrc = 245
@@ -126,7 +131,7 @@ for i, scenario in enumerate(scenarios[:1]): #single check
         # inheader = segysak.segy.segy_header_scrape(scenario+'/Vs_smooth_2D')
         rec_v = rec_v.resample(dt=dt_r)
         print(np.unique(rec_v.data))
-        path = 'Results/2d_vankor/Regular'
+        path = 'Results/2D_vankor/Regular'
         segyio.tools.from_array2D(path +'/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', rec_v.data.T, dt=dt_r*10**3)
         with segyio.open(path+'/2d_vankor_SRC-'+str(int(src_coords[0]))+'.sgy', 'r+') as f:
             for j in range(len(f.header)):

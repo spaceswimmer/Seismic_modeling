@@ -126,7 +126,7 @@ for i, scenario in enumerate(scenarios[:1]): #single check
         dt_r = 0.5
         # inheader = segysak.segy.segy_header_scrape(scenario+'/Vs_smooth_2D')
         rec_v = rec_v.resample(dt=dt_r)
-        path = 'Results/2d_vankor/Smooth'
+        path = 'Results/2D_vankor/Smooth'
         segyio.tools.from_array2D(path +'/2d_smooth-vankor_SRC-'+str(int(src_coords[0]))+'.sgy', rec_v.data.T, dt=dt_r*10**3)
         with segyio.open(path+'/2d_smooth-vankor_SRC-'+str(int(src_coords[0]))+'.sgy', 'r+') as f:
             for j in range(len(f.header)):
