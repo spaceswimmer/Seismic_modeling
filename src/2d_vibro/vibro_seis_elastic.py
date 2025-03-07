@@ -1,0 +1,88 @@
+import sys
+import os
+sys.path.insert(1, '/home/spaceswimmer/Documents/NeoGen_Modeling/src')
+
+import numpy as np
+import argparse
+import matplotlib.pyplot as plt
+from scratch.devito_shared import run_on_gpu, CreateSeismicModelElastic, elastic_solver
+from examples.seismic.source import RickerSource, Receiver, TimeAxis
+
+def model_creation():
+    spacing = (0.5, 0.5)
+    shape = (int(110//spacing[0]), int(114//spacing[1]))
+    origin = (0, 0)
+    nbl = 10
+    so = 4
+
+    vp = np.ones(shape, dtype=np.float32)
+    rho = np.ones(shape, dtype=np.float32) * 1.6
+    # vs примем просто 0.5 от vp
+
+    #layer1
+    l1 = int(35//spacing[1])
+    vp[:,:l1] = 1.45
+    #layer2
+    l2 = int(70//spacing[1])
+    vp[:,l1:l2] = 1.55
+    #layer3
+    l3 = int(114//spacing[1])
+    vp[:,l2:l3] = 1.87
+    
+    model = CreateSeismicModelElastic(
+                    origin=origin,
+                    spacing=spacing,
+                    shape=shape,
+                    vp=vp,
+                    vs=vp*0.5,
+                    rho=rho,
+                    so=so,
+                    nbl=nbl,
+                    bcs='damp'
+                    )
+    model.damp.data[:, :100] = model.damp.data[:, 101][:, None]
+    
+    return model
+def plot_seis_data(rec):
+    plt.imshow(rec.data[:], aspect='auto', vmin=-.5*1e-3, vmax=.5*1e-3)
+    plt.show
+
+def main():
+    parser = argparse.ArgumentParser(description="vibroseis elastic modeling")
+    parser.add_argument("sx", type=float, help="Source X position")
+    parser.add_argument("sz", type=float, help="Source Z position")
+    parser.add_argument("rec", help="path to file with rec coordinates")
+    parser.add_argument("-gpu", action="store_true", help = "Run modeling on GPU")
+    parser.add_argument("-r", "--output", help="Output file", required=False)
+    args = parser.parse_args()
+
+    if args.gpu:
+        run_on_gpu()
+
+    model = model_creation()
+    
+    # геометрия
+    t0=0.
+    tn=2000.
+    dt = model.critical_dt/2
+    time_range = TimeAxis(start=t0, stop=tn, step=dt)
+    f0=0.06
+
+    nsrc = 1
+    src_coordinates = np.empty((nsrc, 2))
+    src_coordinates[:, 0] = args.sx
+    src_coordinates[:, 1] = args.sz
+
+    rec_coordinates = np.loadtxt(args.rec)
+
+    op, rec, _, _ = elastic_solver(model, time_range, f0, src_coordinates, rec_coordinates)
+    summary = op.apply(dt=dt)
+    dt_r = 0.5
+    rec = rec.resample(dt=dt_r)
+
+    print(np.unique(rec.data))
+    plot_seis_data(rec)
+
+
+if __name__ == "__main__":
+    main()

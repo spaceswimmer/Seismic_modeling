@@ -13,13 +13,12 @@ from devito import configuration, VectorTimeFunction, TensorTimeFunction, Eq, Op
 from scratch.util import CreateSeismicModelElastic, nn_interp_coords
 
 configuration['ignore-unknowns'] = True
-#Закоменти, чтобы выполнять на CPU
-from devito import configuration
-#(a) using one GPU
-#(b) using multi-GPUs with MPI (requires turning the notebook into a python script)
-configuration['platform'] = 'nvidiaX'
-configuration['compiler'] = 'pgcc'
-configuration['language'] = 'openacc'
+
+
+def run_on_gpu():
+    configuration['platform'] = 'nvidiaX'
+    configuration['compiler'] = 'pgcc'
+    configuration['language'] = 'openacc'
 
 def define_model():
     # сетка
@@ -73,7 +72,7 @@ def main():
     parser = argparse.ArgumentParser(description="Preset model acoustic modeling")
     parser.add_argument("sx", type=float, help="Source X position")
     parser.add_argument("sz", type=float, help="Source Z position")
-    parser.add_argument("h", type=float, help="Well spacing")
+    parser.add_argument("rec", help="path to file with rec coordinates")
     parser.add_argument("-r", "--output", help="Output file", required=True)
     args = parser.parse_args()
 

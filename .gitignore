@@ -1,7 +1,7 @@
 #Ignore folders
 .venv/
 Results/
-Data/Meshdurechenskaya/
+data/Meshdurechenskaya/
 schism/
 
 #Ignore files
