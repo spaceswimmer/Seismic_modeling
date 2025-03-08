@@ -46,9 +46,11 @@ def CreateSeismicModelAcoustic(vp, rho, origin, spacing, shape, so, nbl, bcs='da
     
     return model
 
-def elastic_solver(model, time_range, f0, src_coords, rec_coords):
+def elastic_solver(model, time_range, f0, src_coordinates, rec_coordinates):
+    
     src = RickerSource(name='src', grid = model.grid, f0=f0, time_range=time_range, npoint=1)
-    src.coordinates.data[:] = src_coords
+    src.coordinates.data[:] = src_coordinates
+    print(src.data.shape)
     
     v = VectorTimeFunction(name='v', grid=model.grid,
                            space_order=4, time_order=2)
@@ -67,11 +69,9 @@ def elastic_solver(model, time_range, f0, src_coords, rec_coords):
 
     s = model.grid.time_dim.spacing
     # Source symbol with input wavelet
-
-    rec = Receiver(name="rec", grid=model.grid, npoint=rec_coords.shape[0], time_range=time_range)
-    rec.coordinates.data[:,0] = rec_coords[:,0]
-    rec.coordinates.data[:,1] = rec_coords[:,1]
-
+    rec = Receiver(name="rec", grid=model.grid, npoint=rec_coordinates.shape[0], time_range=time_range)
+    rec.coordinates.data[:,0] = rec_coordinates[:,0]
+    rec.coordinates.data[:,1] = rec_coordinates[:,1]
     
     rec_term = rec.interpolate(expr=v[1])
     # The source injection term
@@ -82,4 +82,4 @@ def elastic_solver(model, time_range, f0, src_coords, rec_coords):
     op = Operator([u_v] + [u_t] + srcrec, subs=model.spacing_map, name="ForwardElastic",
                   # opt=('noop', {'openmp': True}),
                  )
-    return op, rec, v, tau
+    return op, rec

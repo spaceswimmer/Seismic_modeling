@@ -7,42 +7,99 @@ import argparse
 import matplotlib.pyplot as plt
 from scratch.devito_shared import run_on_gpu, CreateSeismicModelElastic, elastic_solver
 from examples.seismic.source import RickerSource, Receiver, TimeAxis
+from examples.seismic import plot_velocity
 
-def model_creation():
-    spacing = (0.5, 0.5)
-    shape = (int(110//spacing[0]), int(114//spacing[1]))
+def define_model():
+    # сетка
+    spacing = (0.2, 0.2)
+    shape = (int(500//spacing[0]), int(500//spacing[0]))
     origin = (0, 0)
-    nbl = 10
+    nbl = 100
     so = 4
 
-    vp = np.ones(shape, dtype=np.float32)
-    rho = np.ones(shape, dtype=np.float32) * 1.6
+    # Данные
+    rho_data=np.ones(shape)
+    vp_data=np.ones(shape)
+    vs_data=np.ones(shape)
+
+    # Layer 1
+    l1=int(2//spacing[0])
+    rho_data[:,0:l1] = 1.8
+    vp_data[:,0:l1] = 0.5
+    vs_data[:,0:l1] = 0.13
+    # Layer 2
+    l2=int(4.8//spacing[0])
+    rho_data[:,l1:l2] = 2
+    vp_data[:,l1:l2] = 1.7
+    vs_data[:,l1:l2] = 0.14
+    # Layer 3
+    l3=int(21.8//spacing[0])
+    rho_data[:,l2:l3] = 2
+    vp_data[:,l2:l3] = 1.7
+    vs_data[:,l2:l3] = 0.16
+    # Layer 4
+    rho_data[:,l3:] = 2.4
+    vp_data[:,l3:] = 1.7
+    vs_data[:,l3:] = 0.55
+    
+    model = CreateSeismicModelElastic(origin=origin,
+                        spacing=spacing,
+                        shape=shape,
+                        vp=vp_data,
+                        vs=vs_data,
+                        rho=rho_data,
+                        so=so,
+                        nbl=nbl,
+                        bcs='damp'
+                        )
+    
+    model.damp.data[:, :100] = model.damp.data[:, 101][:, None]
+    
+    return model
+def model_creation():
+    spacing = (1, 1)
+    shape = (int(110//spacing[0]), int(114//spacing[1]))
+    origin = (0, 0)
+    nbl = 50
+    so = 4
+
+    vp = np.ones(shape)
+    vs = np.ones(shape)
+    rho = np.ones(shape)
     # vs примем просто 0.5 от vp
 
     #layer1
     l1 = int(35//spacing[1])
-    vp[:,:l1] = 1.45
+    vp[:,0:l1] = 1.45
+    vs[:,0:l1] = 1.45/2**0.5
+    rho[:,0:l1] = 1.6
     #layer2
     l2 = int(70//spacing[1])
     vp[:,l1:l2] = 1.55
+    vs[:,l1:l2] = 1.55/2**0.5
+    rho[:,l1:l2] = 1.6
     #layer3
-    l3 = int(114//spacing[1])
-    vp[:,l2:l3] = 1.87
+    vp[:,l2:] = 1.87
+    vs[:,l2:] = 1.87/2**0.5
+    rho[:,l2:] = 1.6
     
     model = CreateSeismicModelElastic(
                     origin=origin,
                     spacing=spacing,
                     shape=shape,
                     vp=vp,
-                    vs=vp*0.5,
+                    vs=vs,
                     rho=rho,
                     so=so,
                     nbl=nbl,
                     bcs='damp'
                     )
-    model.damp.data[:, :100] = model.damp.data[:, 101][:, None]
+    print(model.shape, model.spacing)
+    
+    # model.damp.data[:, :100] = model.damp.data[:, 101][:, None]
     
     return model
+
 def plot_seis_data(rec):
     plt.imshow(rec.data[:], aspect='auto', vmin=-.5*1e-3, vmax=.5*1e-3)
     plt.show
@@ -64,9 +121,9 @@ def main():
     # геометрия
     t0=0.
     tn=2000.
-    dt = model.critical_dt/2
+    dt = model.critical_dt
     time_range = TimeAxis(start=t0, stop=tn, step=dt)
-    f0=0.06
+    f0=0.05
 
     nsrc = 1
     src_coordinates = np.empty((nsrc, 2))
@@ -75,7 +132,8 @@ def main():
 
     rec_coordinates = np.loadtxt(args.rec)
 
-    op, rec, _, _ = elastic_solver(model, time_range, f0, src_coordinates, rec_coordinates)
+
+    op, rec = elastic_solver(model, time_range, f0, src_coordinates, rec_coordinates)
     summary = op.apply(dt=dt)
     dt_r = 0.5
     rec = rec.resample(dt=dt_r)
