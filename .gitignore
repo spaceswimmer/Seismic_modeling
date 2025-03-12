@@ -1,7 +1,12 @@
 #Ignore folders
 .venv/
-Results/
 data/Meshdurechenskaya/
-
+#Ignore results
+results/2d_acoustic/*.sgy
+results/2d_acoustic/*/*.sgy
+results/2d_elastic/*.sgy
+results/2d_vankor/*/*.sgy
+results/Meshdurechenskaya/*
+results/vibro_elastic/*.npz
 #Ignore files
 .ipynb_checkpoints

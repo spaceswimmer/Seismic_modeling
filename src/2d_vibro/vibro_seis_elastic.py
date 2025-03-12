@@ -5,8 +5,8 @@ sys.path.insert(1, '/home/spaceswimmer/Documents/NeoGen_Modeling/src')
 import numpy as np
 import argparse
 import matplotlib.pyplot as plt
-from scratch.devito_shared import run_on_gpu, CreateSeismicModelElastic, elastic_solver
-from examples.seismic.source import RickerSource, Receiver, TimeAxis
+from scratch.devito_shared import run_on_gpu, CreateSeismicModelElastic, elastic_solver, SweepSource, ricker_wavelet
+from examples.seismic.source import Receiver, TimeAxis
 from examples.seismic import plot_velocity
 
 def define_model():
@@ -120,26 +120,28 @@ def main():
     
     # геометрия
     t0=0.
-    tn=2000.
+    tn=20000.
     dt = model.critical_dt
     time_range = TimeAxis(start=t0, stop=tn, step=dt)
-    f0=0.05
+    f0=0.06
 
     nsrc = 1
     src_coordinates = np.empty((nsrc, 2))
     src_coordinates[:, 0] = args.sx
     src_coordinates[:, 1] = args.sz
+    src = SweepSource(name='src', grid = model.grid, f0=f0, sweep_f=[0.02,0.05], time_range=time_range, npoint=1)
+    src.data[:,0] = np.convolve(src.data[:,0], ricker_wavelet(f0, dt))[:src.data.shape[0]]
+    src.coordinates.data[:] = src_coordinates
 
     rec_coordinates = np.loadtxt(args.rec)
 
 
-    op, rec = elastic_solver(model, time_range, f0, src_coordinates, rec_coordinates)
+    op, rec = elastic_solver(model, time_range, f0, src, rec_coordinates)
     summary = op.apply(dt=dt)
     dt_r = 0.5
     rec = rec.resample(dt=dt_r)
 
-    print(np.unique(rec.data))
-    plot_seis_data(rec)
+    np.savez_compressed(f"../results/vibro_elastic/vibro_full", data=rec.data, dt = dt_r, sweep = src.data[:,0])
 
 
 if __name__ == "__main__":
