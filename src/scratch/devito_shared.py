@@ -74,6 +74,20 @@ def ricker_wavelet(frequency, dt):
     y = (1 - 2 * (np.pi ** 2) * (frequency ** 2) * (t ** 2)) * np.exp(-(np.pi ** 2) * (frequency ** 2) * (t ** 2))
     return y
 
+def gen_sweep(time_values, sweep_f):
+    t_max = time_values[-1]
+    dt = time_values[1] - time_values[0]
+    f_grad = (sweep_f[1] - sweep_f[0]) / t_max
+    f = sweep_f[0] + f_grad * time_values
+    trace = np.zeros_like(time_values)
+    
+    t_c = 0
+    while t_c < t_max:
+        t_ind = int(t_c / dt)
+        trace[t_ind] = 1
+        t_c += 1 / f[t_ind]
+    return trace
+
 def CreateSeismicModelElastic(vp, vs, rho, origin, spacing, shape, so, nbl, bcs='damp'):
 
     model = demo_model(preset='layers-elastic', nlayers=3, shape=shape, spacing=spacing,

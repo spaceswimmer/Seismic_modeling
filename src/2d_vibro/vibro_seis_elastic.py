@@ -140,6 +140,7 @@ def main():
     summary = op.apply(dt=dt)
     dt_r = 0.5
     rec = rec.resample(dt=dt_r)
+    src = src.resample(dt=dt_r)
 
     np.savez_compressed(f"../results/vibro_elastic/vibro_full", data=rec.data, dt = dt_r, sweep = src.data[:,0])
 
