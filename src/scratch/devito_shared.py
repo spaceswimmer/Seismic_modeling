@@ -159,3 +159,132 @@ def elastic_solver(model, time_range, f0, src, rec_coordinates):
                   # opt=('noop', {'openmp': True}),
                  )
     return op, rec
+
+def acoustic_solver(u, model, t0, tn, f0, src_pos=[[0,0]], rec_pos=None, dt=None):
+    if dt == None:
+        dt=model.critical_dt
+    time_range = TimeAxis(start=t0, stop=tn, step=dt)
+
+    #Sources
+    src = RickerSource(name='src', grid=model.grid, f0=f0,
+                   npoint=1, time_range=time_range)
+    src.coordinates.data[:, 0] = src_pos[:, 0]
+    src.coordinates.data[:, 1] = src_pos[:, 1]
+    src_term = src.inject(field=u.forward, expr=src * dt**2 / model.m)
+
+    #Receivers
+    if rec_pos != None:
+        rec = Receiver(name='rec', grid=model.grid, npoint=rec_pos.shape[0], time_range=time_range)
+
+        # Prescribe even spacing for receivers along the x-axis
+        rec.coordinates.data[:, 0] = rec_pos[:, 0]
+        rec.coordinates.data[:, 1] = rec_pos[:, 1]
+        src_term += rec.interpolate(expr=u.forward)
+    
+    #Snapshots
+    nsnaps = time_range.num
+    factor = round(time_range.num / nsnaps)
+    time_subsampled = ConditionalDimension('t_sub', parent=model.grid.time_dim, factor=factor)
+    usave = TimeFunction(name='usave', grid=model.grid, time_order=2, space_order=4,
+                         save=nsnaps, time_dim=time_subsampled)
+
+    #Operator
+    pde = model.m * u.dt2 - u.laplace + model.damp * u.dt
+    stencil = Eq(u.forward, solve(pde, u.forward))
+    op = Operator([stencil] + src_term + [Eq(usave, u)],
+                subs=model.spacing_map)  # operator with snapshots
+    return op, rec, usave, time_range, dt
+
+def tti_solver(p, q, b, pp, model, t0, tn, f0, src_pos, rec_pos=None, dt=None):
+    # Get symbols from model
+    theta = model.theta
+    delta = model.delta
+    epsilon = model.epsilon
+    m = model.m
+
+    # Use trigonometric functions from Devito
+    costheta = cos(theta)
+    sintheta = sin(theta)
+    cos2theta = cos(2 * theta)
+    sin2theta = sin(2 * theta)
+    sin4theta = sin(4 * theta)
+
+    # Values used to compute the time sampling
+    epsilonmax = np.max(np.abs(epsilon.data[:]))
+    deltamax = np.max(np.abs(delta.data[:]))
+    etamax = max(epsilonmax, deltamax)
+    vmax = model._max_vp
+    max_cos_sin = np.amax(
+        np.abs(np.cos(theta.data[:]) - np.sin(theta.data[:])))
+    dvalue = min(model.spacing)
+
+    if dt is None:
+        dt = (dvalue / (np.pi * vmax)) * \
+            np.sqrt(1 / (1 + etamax * (max_cos_sin) ** 2))
+    time_range = TimeAxis(start=t0, stop=tn, step=dt)
+
+    # Main equations
+    term1_p = (
+        1 + 2 * delta * (sintheta**2) * (costheta**2) +
+        2 * epsilon * costheta**4
+    ) * q.dx4
+    term2_p = (
+        1 + 2 * delta * (sintheta**2) * (costheta**2) +
+        2 * epsilon * sintheta**4
+    ) * q.dy4
+    term3_p = (
+        2
+        - delta * (sin2theta) ** 2
+        + 3 * epsilon * (sin2theta) ** 2
+        + 2 * delta * (cos2theta) ** 2
+    ) * ((q.dy2).dx2)
+    term4_p = (delta * sin4theta - 4 * epsilon *
+               sin2theta * costheta**2) * ((q.dy).dx3)
+    term5_p = (-delta * sin4theta - 4 * epsilon * sin2theta * sintheta**2) * (
+        (q.dy3).dx
+    )
+
+    stencil_p = solve(
+        m * p.dt2 - (term1_p + term2_p + term3_p +
+                     term4_p + term5_p), p.forward
+    )
+    update_p = Eq(p.forward, stencil_p)
+
+    # Create stencil and boundary condition expressions
+    x, z = model.grid.dimensions
+    t = model.grid.stepping_dim
+
+    update_q = Eq(
+        pp[t + 1, x, z],
+        (
+            (pp[t, x + 1, z] + pp[t, x - 1, z]) * z.spacing**2
+            + (pp[t, x, z + 1] + pp[t, x, z - 1]) * x.spacing**2
+            - b[x, z] * x.spacing**2 * z.spacing**2
+        )
+        / (2 * (x.spacing**2 + z.spacing**2)),
+    )
+
+    bc = [Eq(pp[t + 1, x, 0], 0.0)]
+    bc += [Eq(pp[t + 1, x, model.shape[1] + 2 * model.nbl - 1], 0.0)]
+    bc += [Eq(pp[t + 1, 0, z], 0.0)]
+    bc += [Eq(pp[t + 1, model.shape[0] - 1 + 2 * model.nbl, z], 0.0)]
+
+    # set source and receivers
+    src = RickerSource(
+        name="src", grid=model.grid, f0=f0, npoint=1, time_range=time_range
+    )
+    src.coordinates.data[:, 0] = src_pos[:, 0]
+    src.coordinates.data[:, 1] = src_pos[:, 1]
+    # Define the source injection
+    src_term = src.inject(field=p.forward, expr=src * dt**2 / m)
+
+    # Returning operators
+    # first: optime, second: oppres
+    optime = Operator([update_p] + src_term,
+                      opt=('advanced', {'gpu-fit': [p, q]})
+                      )
+    oppres = Operator([update_q] + bc,
+                      opt=('advanced', {'gpu-fit': [pp, b]}), 
+                      )
+
+    return optime, oppres, time_range
