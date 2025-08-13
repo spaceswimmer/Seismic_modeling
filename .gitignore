@@ -10,3 +10,4 @@ results/Meshdurechenskaya/*
 results/vibro_elastic/*.npz
 #Ignore files
 .ipynb_checkpoints
+Results/
