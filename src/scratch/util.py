@@ -31,11 +31,13 @@ def nn_interp_coords(data: np.ndarray, origin: tuple, domain_size : tuple, spaci
 
     return new_value
     
-def plot_rec_src(model: SeismicModel, data_type: str, src_coords, rec_coords, xrange: tuple = None, yrange: tuple = None):
+def plot_rec_src(model: SeismicModel, data_type: str, src_coords, rec_coords, xrange: tuple = None, yrange: tuple = None, meters: bool = False):
+    constant = 1
+    if meters: constant = 1e3
     cmap = "jet"
     domain_size = 1.e-3 * np.array(model.domain_size)
-    extent = [model.origin[0], model.origin[0] + domain_size[0],
-              model.origin[1] + domain_size[1], model.origin[1]]
+    extent = [model.origin[0]*constant, model.origin[0]*constant + domain_size[0]*constant,
+              model.origin[1]*constant + domain_size[1]*constant, model.origin[1]*constant]
     slices = tuple(slice(model.nbl, -model.nbl) for _ in range(2))
     
     match data_type:
@@ -52,24 +54,30 @@ def plot_rec_src(model: SeismicModel, data_type: str, src_coords, rec_coords, xr
         case _:
             raise ValueError('No such data in layers-elastic model')
             
-    
-    plot = plt.imshow(np.transpose(field), animated=True, cmap=cmap,
+    fig, ax = plt.subplots(figsize=(16,4))
+    im = ax.imshow(np.transpose(field), animated=True, cmap=cmap,
                       vmin=np.min(field), vmax=np.max(field),
-                      extent=extent, aspect='auto')
-    
-    plt.xlabel('X position (km)')
-    plt.ylabel('Depth (km)')
-    
-    plt.scatter(1e-3*rec_coords[:, 0], 1e-3*rec_coords[:, 1],
-                        s=15, c='green', marker='D')
-    plt.scatter(1e-3*src_coords[:, 0], 1e-3*src_coords[:, 1],
-                        s=15, c='red', marker='D')
+                      extent=extent, aspect='equal')
+    if meters:
+        ax.set_xlabel('X position (m)')
+        ax.set_ylabel('Depth (m)')
+        ax.scatter(rec_coords[:, 0], 1e-3*rec_coords[:, 1],
+                    s=15, c='green', marker='D', label="recievers")
+        ax.scatter(src_coords[:, 0], 1e-3*src_coords[:, 1],
+                            s=15, c='red', marker='D', label="sources")
+    else:
+        ax.set_xlabel('X position (km)')
+        ax.set_ylabel('Depth (km)')
+        ax.scatter(constant*rec_coords[:, 0], 1e-3*rec_coords[:, 1],
+                            s=15, c='green', marker='D', label="recievers")
+        ax.scatter(constant*src_coords[:, 0], 1e-3*src_coords[:, 1],
+                            s=15, c='red', marker='D', label="sources")
         
-    plt.colorbar(plot)
+    cbar = fig.colorbar(im, ax=ax)
     
-    plt.xlim(xrange) # Пределы можно регулировать
-    plt.ylim(yrange)
-    plt.show()
+    ax.set_xlim(xrange) # Пределы можно регулировать
+    ax.set_ylim(yrange)
+    ax.legend()
 
 def plot_seis_data(rec_coordinates, rec_data, t0: float, tn: float, gain = 2e1):
     #NBVAL_SKIP

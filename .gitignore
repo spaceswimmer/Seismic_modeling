@@ -1,17 +1,31 @@
 #Ignore folders
 .venv/
-data/Meshdurechenskaya/
 #Ignore results
-results/2d_acoustic/oshkin_model/*
-results/2d_acoustic/VSP_Gypsum/VSP*/*
+results/2d_acoustic/*
+!results/2d_acoustic/.gitkeep
+
 results/2d_elastic/*
+!results/2d_elastic/.gitkeep
+
 results/vibro_elastic/*
-Results/
+!results/vibro_elastic/.gitkeep
 #Ignore data
+data/Meshdurechenskaya/*
+!data/Meshdurechenskaya/.gitkeep
+
 data/2D_Scenarios/*
+!data/2D_Scenarios/.gitkeep
+
 data/AM_model/*
+!data/AM_model/.gitkeep
+
 data/Oshkin_vankor_model/*
+!data/Oshkin_vankor_model/.gitkeep
+
 data/vibro_seis/*
+!data/vibro_seis/.gitkeep
+
 data/VSP_Gypsum_data/*
+!data/VSP_Gypsum_data/.gitkeep
 #Ignore files
 .ipynb_checkpoints
