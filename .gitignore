@@ -2,12 +2,16 @@
 .venv/
 data/Meshdurechenskaya/
 #Ignore results
-results/2d_acoustic/*.sgy
-results/2d_acoustic/*/*.sgy
-results/2d_elastic/*.sgy
-results/2d_vankor/*/*.sgy
-results/Meshdurechenskaya/*
-results/vibro_elastic/*.npz
+results/2d_acoustic/oshkin_model/*
+results/2d_acoustic/VSP_Gypsum/VSP*/*
+results/2d_elastic/*
+results/vibro_elastic/*
+Results/
+#Ignore data
+data/2D_Scenarios/*
+data/AM_model/*
+data/Oshkin_vankor_model/*
+data/vibro_seis/*
+data/VSP_Gypsum_data/*
 #Ignore files
 .ipynb_checkpoints
-Results/
