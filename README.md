@@ -12,7 +12,7 @@ Due to confidentiality agreements, certain datasets and modeling results are not
 - **GPU Acceleration:** NVIDIA CUDA Toolkit (v11.0+)  
 - **Python Dependencies:**  
   - Devito (v4.8+)  
-  - NumPy, SciPy, Matplotlib
+  - NumPy, SciPy, Matplotlib  
   (using requirements.txt prefered) 
 
 ## Repository Structure  
@@ -43,8 +43,8 @@ Seismic_modeling/
 
 ## Installation  
 1. **Set up CUDA Toolkit:**  
-    Install CUDA Toolkit from official NVIDIA website:
-    🔗 **CUDA Toolkit:** [https://developer.nvidia.com/cuda-downloads?target_os=Linux](CUDA Toolkit)  
+    Install CUDA Toolkit from official NVIDIA website:  
+    🔗 **CUDA Toolkit:** [Download](https://developer.nvidia.com/cuda-downloads?target_os=Linux)  
 2. **Create Conda Environment or Python virtual environment:**  
     Conda approach:
     ```bash  

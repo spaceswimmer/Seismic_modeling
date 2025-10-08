@@ -9,6 +9,9 @@ results/2d_elastic/*
 
 results/vibro_elastic/*
 !results/vibro_elastic/.gitkeep
+
+results/2d_vankor/*
+!results/2d_vankor/.gitkeep
 #Ignore data
 data/Meshdurechenskaya/*
 !data/Meshdurechenskaya/.gitkeep
@@ -27,5 +30,7 @@ data/vibro_seis/*
 
 data/VSP_Gypsum_data/*
 !data/VSP_Gypsum_data/.gitkeep
+
+data/data
 #Ignore files
 .ipynb_checkpoints
