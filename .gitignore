@@ -12,6 +12,9 @@ results/vibro_elastic/*
 
 results/2d_vankor/*
 !results/2d_vankor/.gitkeep
+
+results/2d_viscoacoustic/*
+!results/2d_viscoacoustic/.gitkeep
 #Ignore data
 data/Meshdurechenskaya/*
 !data/Meshdurechenskaya/.gitkeep
