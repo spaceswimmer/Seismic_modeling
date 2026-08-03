@@ -13,7 +13,7 @@ Due to confidentiality agreements, certain datasets and modeling results are not
 - **Python Dependencies:**  
   - Devito (v4.8+)  
   - NumPy, SciPy, Matplotlib  
-  (using requirements.txt prefered) 
+  (managed via `uv` using `pyproject.toml` + `uv.lock`)
 
 ## Repository Structure  
 ```  
@@ -31,8 +31,9 @@ Seismic_modeling/
 │   ├── Experimental code       # VIP code
 │   └── scratch/                # utility library with custom solvers and functions
 ├── /tests/                 # Unit and integration tests (pytest) (VIP not implemented yet) 
-├── /requiremets_conda.txt  # Conda env requirements
-├── /requiremets.txt        # Python venv requirements
+├── /requirements_conda.txt # Conda env requirements (alternative to uv)
+├── /pyproject.toml         # uv-managed dependencies and project metadata
+├── /uv.lock                # Locked dependency versions (uv)
 └── README.md               # Project documentation  
 ```  
 
@@ -45,18 +46,16 @@ Seismic_modeling/
 1. **Set up CUDA Toolkit:**  
     Install CUDA Toolkit from official NVIDIA website:  
     🔗 **CUDA Toolkit:** [Download](https://developer.nvidia.com/cuda-downloads?target_os=Linux)  
-2. **Create Conda Environment or Python virtual environment:**  
+2. **Create Conda Environment or uv virtual environment:**  
     Conda approach:
     ```bash  
     conda create -n devito --file requirements_conda.txt  
     conda activate devito   
     ```
-    Python venv approach:
+    uv approach (recommended):
     ```bash
-    pip install virtualenv
-    virtualenv .venv
+    uv sync
     source .venv/bin/activate
-    pip install -r requirements.txt
     ```
 
 ## Usage  

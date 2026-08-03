@@ -1,0 +1,37 @@
+[project]
+name = "seismic-modeling"
+version = "0.1.0"
+description = "Seismic modeling workflows using the Devito framework: wave propagation simulations, reverse time migration (RTM), and full waveform inversion (FWI)."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "cgen==2020.1",
+    "codepy==2023.1",
+    "devito==4.8.13",
+    "matplotlib==3.10.1",
+    "numpy==2.2.3",
+    "pandas>=2.2",
+    "pykonal>=0.4",
+    "scipy==1.15.2",
+    "segyio==1.9.13",
+    "segysak>=0.5",
+    "tqdm==4.67.1",
+    "xarray>=2025.1",
+    "fonttools>=4.60.2",
+    "h5py>=3.11",
+    "pillow>=12.3.0",
+    "setuptools>=83.0.0",
+    "tornado>=6.5.7",
+    "wheel>=0.46.2",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29",
+    "ipython>=8",
+    "pygments>=2.20.0",
+    "pytest>=9.0.3",
+]
+
+[tool.uv]
+package = false
